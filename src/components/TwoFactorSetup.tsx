@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/components/ui/use-toast';
 
 const TwoFactorSetup = () => {
-  const [secret] = useState(() => OTPAuth.Secret.generate());
+  const [secret] = useState(() => OTPAuth.Secret.random());
   const [verificationCode, setVerificationCode] = useState('');
   const [isConfigured, setIsConfigured] = useState(false);
   const { toast } = useToast();
