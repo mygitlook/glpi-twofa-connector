@@ -2,7 +2,7 @@
 class PluginTwofactorAuth extends CommonDBTM {
    
    static function checkAuth($user) {
-      global $DB;
+      global $DB, $CFG_GLPI;
       
       if (!isset($user['id'])) {
          return true;
@@ -16,11 +16,16 @@ class PluginTwofactorAuth extends CommonDBTM {
       $result = $DB->query($query);
       
       if ($DB->numrows($result) > 0) {
-         // User has 2FA enabled, redirect to verification page
+         // User has 2FA enabled, check if already verified
          if (!isset($_SESSION['plugin_twofactor_verified'])) {
+            // Redirect to verification page if not verified
             Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/verify.php');
             return false;
          }
+      } else {
+         // User doesn't have 2FA set up, redirect to setup page
+         Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/config.form.php');
+         return false;
       }
       
       return true;
