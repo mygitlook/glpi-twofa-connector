@@ -5,6 +5,9 @@ function plugin_init_twofactor() {
    $PLUGIN_HOOKS['csrf_compliant']['twofactor'] = true;
    $PLUGIN_HOOKS['post_init']['twofactor'] = 'plugin_twofactor_postinit';
    
+   // Add authentication hook
+   $PLUGIN_HOOKS['pre_login_authenticated']['twofactor'] = 'plugin_twofactor_check_auth';
+   
    // Add menu entry
    $PLUGIN_HOOKS['menu_toadd']['twofactor'] = array(
       'config' => 'PluginTwofactorConfig'
@@ -24,4 +27,9 @@ function plugin_version_twofactor() {
          )
       )
    );
+}
+
+function plugin_twofactor_check_auth($user) {
+   include_once(GLPI_ROOT . '/plugins/twofactor/inc/auth.class.php');
+   return PluginTwofactorAuth::checkAuth($user);
 }
