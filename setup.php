@@ -4,9 +4,9 @@ function plugin_init_twofactor() {
    
    $PLUGIN_HOOKS['csrf_compliant']['twofactor'] = true;
    
-   // Add authentication hook - this is crucial for 2FA
-   $PLUGIN_HOOKS['pre_login']['twofactor'] = 'plugin_twofactor_check_auth';
-   $PLUGIN_HOOKS['post_login']['twofactor'] = 'plugin_twofactor_check_auth';
+   // Add authentication hooks - this is crucial for 2FA
+   $PLUGIN_HOOKS['pre_init']['twofactor'] = 'plugin_twofactor_check_auth';
+   $PLUGIN_HOOKS['init_session']['twofactor'] = 'plugin_twofactor_check_auth';
    
    // Hook for new user creation
    $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
@@ -33,11 +33,24 @@ function plugin_version_twofactor() {
    ];
 }
 
-function plugin_twofactor_check_auth($user = null) {
-   global $DB;
+function plugin_twofactor_check_auth() {
+   global $DB, $CFG_GLPI;
    
    if (!isset($_SESSION['glpiID'])) {
       return true;
+   }
+   
+   // Skip 2FA check for specific pages
+   $current_page = $_SERVER['PHP_SELF'];
+   $allowed_pages = [
+      '/plugins/twofactor/front/verify.php',
+      '/plugins/twofactor/front/config.form.php'
+   ];
+   
+   foreach ($allowed_pages as $page) {
+      if (strpos($current_page, $page) !== false) {
+         return true;
+      }
    }
    
    $userId = $_SESSION['glpiID'];
@@ -53,12 +66,12 @@ function plugin_twofactor_check_auth($user = null) {
       // If user has 2FA enabled but not verified in this session
       if (!isset($_SESSION['plugin_twofactor_verified'])) {
          Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/verify.php');
-         return false;
+         exit();
       }
    } else {
       // User doesn't have 2FA set up at all, redirect to setup
       Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/config.form.php');
-      return false;
+      exit();
    }
    
    return true;
