@@ -19,7 +19,7 @@ class PluginTwofactorAuth extends CommonDBTM {
          $row = $DB->fetch_assoc($result);
          
          // If user has 2FA enabled but not verified in this session
-         if ($row['is_active'] && !isset($_SESSION['plugin_twofactor_verified'])) {
+         if (!isset($_SESSION['plugin_twofactor_verified'])) {
             // Redirect to verification page
             Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/verify.php');
             return false;
