@@ -5,7 +5,7 @@ class PluginTwofactorConfig extends CommonDBTM {
    }
 
    function showConfigForm() {
-      global $CFG_GLPI;
+      global $DB, $CFG_GLPI;
       
       $userId = $_SESSION['glpiID'];
       
