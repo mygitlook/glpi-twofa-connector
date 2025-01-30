@@ -40,12 +40,22 @@ function plugin_twofactor_install() {
 function plugin_twofactor_uninstall() {
    global $DB;
    
-   $tables = array(
-      'glpi_plugin_twofactor_secrets'
-   );
+   try {
+      $tables = array(
+         'glpi_plugin_twofactor_secrets'
+      );
 
-   foreach($tables as $table) {
-      $DB->query("DROP TABLE IF EXISTS `$table`");
+      foreach($tables as $table) {
+         $DB->query("DROP TABLE IF EXISTS `$table`");
+      }
+      
+      // Clear any 2FA-related session variables
+      if (isset($_SESSION['plugin_twofactor_verified'])) {
+         unset($_SESSION['plugin_twofactor_verified']);
+      }
+      
+      return true;
+   } catch (Exception $e) {
+      return false;
    }
-   return true;
 }

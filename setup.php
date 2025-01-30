@@ -36,7 +36,8 @@ function plugin_version_twofactor() {
 function plugin_twofactor_check_auth() {
    global $DB, $CFG_GLPI;
    
-   if (!isset($_SESSION['glpiID'])) {
+   // Skip check if not logged in or on login page
+   if (!isset($_SESSION['glpiID']) || strpos($_SERVER['PHP_SELF'], '/front/login.php') !== false) {
       return true;
    }
    
