@@ -2,26 +2,30 @@
 function plugin_init_twofactor() {
    global $PLUGIN_HOOKS;
    
+   // Initialize hooks array if not set
+   if (!isset($PLUGIN_HOOKS['csrf_compliant'])) {
+      $PLUGIN_HOOKS['csrf_compliant'] = array();
+   }
+   
    // Ensure CSRF compliance
    $PLUGIN_HOOKS['csrf_compliant']['twofactor'] = true;
    
-   // Only register hooks if the plugin is active and user is authenticated
-   if (Session::getLoginUserID()) {
-      // Add authentication hooks
-      $PLUGIN_HOOKS['pre_init']['twofactor'] = 'plugin_twofactor_check_auth';
-      $PLUGIN_HOOKS['init_session']['twofactor'] = 'plugin_twofactor_check_auth';
-      $PLUGIN_HOOKS['post_init']['twofactor'] = 'plugin_twofactor_check_auth';
-      
-      // Hook for new user creation
-      $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
-      
-      // Add menu entry for configuration
-      if (Session::haveRight('config', UPDATE)) {
-         Plugin::registerClass('PluginTwofactorConfig', ['addtomenu' => true]);
-         $PLUGIN_HOOKS['menu_toadd']['twofactor'] = [
-            'config' => 'PluginTwofactorConfig'
-         ];
-      }
+   // Register authentication hooks regardless of login status
+   $PLUGIN_HOOKS['pre_init']['twofactor'] = 'plugin_twofactor_check_auth';
+   $PLUGIN_HOOKS['init_session']['twofactor'] = 'plugin_twofactor_check_auth';
+   $PLUGIN_HOOKS['post_init']['twofactor'] = 'plugin_twofactor_check_auth';
+   
+   // Hook for new user creation
+   $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
+   
+   // Register the plugin class
+   Plugin::registerClass('PluginTwofactorConfig');
+   
+   // Add menu entry for configuration if user has rights
+   if (Session::getLoginUserID() && Session::haveRight('config', UPDATE)) {
+      $PLUGIN_HOOKS['menu_toadd']['twofactor'] = [
+         'config' => 'PluginTwofactorConfig'
+      ];
    }
 }
 
@@ -57,7 +61,9 @@ function plugin_twofactor_check_auth() {
       '/plugins/twofactor/front/config.form.php',
       '/front/plugin.form.php',
       '/front/plugin.php',
-      '/ajax/common.tabs.php'  // Allow AJAX requests
+      '/ajax/common.tabs.php',  // Allow AJAX requests
+      '/ajax/dropdown.php',     // Allow dropdown AJAX requests
+      '/front/central.php'      // Allow access to dashboard
    ];
    
    foreach ($allowed_pages as $page) {
