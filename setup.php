@@ -7,8 +7,16 @@ function plugin_init_twofactor() {
       $PLUGIN_HOOKS['csrf_compliant'] = array();
    }
    
-   // Ensure CSRF compliance
+   // Ensure CSRF compliance first
    $PLUGIN_HOOKS['csrf_compliant']['twofactor'] = true;
+   
+   // Register the plugin class before any hooks
+   Plugin::registerClass('PluginTwofactorConfig', [
+      'addtomenu' => true,
+      'rights' => [
+         'config' => UPDATE
+      ]
+   ]);
    
    // Register authentication hooks regardless of login status
    $PLUGIN_HOOKS['pre_init']['twofactor'] = 'plugin_twofactor_check_auth';
@@ -18,14 +26,12 @@ function plugin_init_twofactor() {
    // Hook for new user creation
    $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
    
-   // Register the plugin class
-   Plugin::registerClass('PluginTwofactorConfig');
-   
    // Add menu entry for configuration if user has rights
    if (Session::getLoginUserID() && Session::haveRight('config', UPDATE)) {
       $PLUGIN_HOOKS['menu_toadd']['twofactor'] = [
          'config' => 'PluginTwofactorConfig'
       ];
+      $PLUGIN_HOOKS['config_page']['twofactor'] = 'front/config.form.php';
    }
 }
 
@@ -39,7 +45,9 @@ function plugin_version_twofactor() {
       'minGLPIVersion' => '9.5',
       'requirements' => [
          'glpi' => [
-            'min' => '9.5'
+            'min' => '9.5',
+            'max' => '10.0.0',
+            'dev' => false
          ]
       ]
    ];
@@ -63,7 +71,9 @@ function plugin_twofactor_check_auth() {
       '/front/plugin.php',
       '/ajax/common.tabs.php',  // Allow AJAX requests
       '/ajax/dropdown.php',     // Allow dropdown AJAX requests
-      '/front/central.php'      // Allow access to dashboard
+      '/front/central.php',     // Allow access to dashboard
+      '/ajax/marketplace.php',  // Allow marketplace access
+      '/ajax/pluginactions.php' // Allow plugin actions
    ];
    
    foreach ($allowed_pages as $page) {
