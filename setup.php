@@ -2,21 +2,27 @@
 function plugin_init_twofactor() {
    global $PLUGIN_HOOKS;
    
+   // Ensure CSRF compliance
    $PLUGIN_HOOKS['csrf_compliant']['twofactor'] = true;
    
-   // Add authentication hooks - this is crucial for 2FA
-   $PLUGIN_HOOKS['pre_init']['twofactor'] = 'plugin_twofactor_check_auth';
-   $PLUGIN_HOOKS['init_session']['twofactor'] = 'plugin_twofactor_check_auth';
-   $PLUGIN_HOOKS['post_init']['twofactor'] = 'plugin_twofactor_check_auth';
-   
-   // Hook for new user creation
-   $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
-   
-   // Add menu entry for configuration
-   Plugin::registerClass('PluginTwofactorConfig', ['addtomenu' => true]);
-   $PLUGIN_HOOKS['menu_toadd']['twofactor'] = [
-      'config' => 'PluginTwofactorConfig'
-   ];
+   // Only register hooks if the plugin is active and user is authenticated
+   if (Session::getLoginUserID()) {
+      // Add authentication hooks
+      $PLUGIN_HOOKS['pre_init']['twofactor'] = 'plugin_twofactor_check_auth';
+      $PLUGIN_HOOKS['init_session']['twofactor'] = 'plugin_twofactor_check_auth';
+      $PLUGIN_HOOKS['post_init']['twofactor'] = 'plugin_twofactor_check_auth';
+      
+      // Hook for new user creation
+      $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
+      
+      // Add menu entry for configuration
+      if (Session::haveRight('config', UPDATE)) {
+         Plugin::registerClass('PluginTwofactorConfig', ['addtomenu' => true]);
+         $PLUGIN_HOOKS['menu_toadd']['twofactor'] = [
+            'config' => 'PluginTwofactorConfig'
+         ];
+      }
+   }
 }
 
 function plugin_version_twofactor() {
@@ -26,6 +32,7 @@ function plugin_version_twofactor() {
       'author' => 'Your Name',
       'license' => 'GPLv2+',
       'homepage' => '',
+      'minGLPIVersion' => '9.5',
       'requirements' => [
          'glpi' => [
             'min' => '9.5'
@@ -37,19 +44,20 @@ function plugin_version_twofactor() {
 function plugin_twofactor_check_auth() {
    global $DB, $CFG_GLPI;
    
-   // Skip check if not logged in or on specific pages
+   // Skip check if not logged in
    if (!isset($_SESSION['glpiID'])) {
       return true;
    }
 
-   // Skip 2FA check for login page and plugin pages
+   // Skip 2FA check for specific pages
    $current_page = $_SERVER['PHP_SELF'];
    $allowed_pages = [
       '/front/login.php',
       '/plugins/twofactor/front/verify.php',
       '/plugins/twofactor/front/config.form.php',
       '/front/plugin.form.php',
-      '/front/plugin.php'
+      '/front/plugin.php',
+      '/ajax/common.tabs.php'  // Allow AJAX requests
    ];
    
    foreach ($allowed_pages as $page) {
@@ -58,9 +66,9 @@ function plugin_twofactor_check_auth() {
       }
    }
    
-   $userId = $_SESSION['glpiID'];
-   
    try {
+      $userId = $_SESSION['glpiID'];
+      
       // Check if user has 2FA secret
       $query = "SELECT * FROM glpi_plugin_twofactor_secrets 
                 WHERE users_id = $userId";
@@ -80,7 +88,6 @@ function plugin_twofactor_check_auth() {
          exit();
       }
    } catch (Exception $e) {
-      // Log error but don't block access
       Toolbox::logError('2FA Check Error: ' . $e->getMessage());
       return true;
    }
