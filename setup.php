@@ -1,37 +1,53 @@
 <?php
 function plugin_init_twofactor() {
-   global $PLUGIN_HOOKS;
+   global $PLUGIN_HOOKS, $CFG_GLPI;
    
-   // Initialize hooks array if not set
-   if (!isset($PLUGIN_HOOKS['csrf_compliant'])) {
-      $PLUGIN_HOOKS['csrf_compliant'] = array();
-   }
-   
-   // Ensure CSRF compliance first
-   $PLUGIN_HOOKS['csrf_compliant']['twofactor'] = true;
-   
-   // Register the plugin class before any hooks
-   Plugin::registerClass('PluginTwofactorConfig', [
-      'addtomenu' => true,
-      'rights' => [
-         'config' => UPDATE
-      ]
-   ]);
-   
-   // Register authentication hooks regardless of login status
-   $PLUGIN_HOOKS['pre_init']['twofactor'] = 'plugin_twofactor_check_auth';
-   $PLUGIN_HOOKS['init_session']['twofactor'] = 'plugin_twofactor_check_auth';
-   $PLUGIN_HOOKS['post_init']['twofactor'] = 'plugin_twofactor_check_auth';
-   
-   // Hook for new user creation
-   $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
-   
-   // Add menu entry for configuration if user has rights
-   if (Session::getLoginUserID() && Session::haveRight('config', UPDATE)) {
-      $PLUGIN_HOOKS['menu_toadd']['twofactor'] = [
-         'config' => 'PluginTwofactorConfig'
-      ];
-      $PLUGIN_HOOKS['config_page']['twofactor'] = 'front/config.form.php';
+   try {
+      // Initialize hooks array if not set
+      if (!isset($PLUGIN_HOOKS['csrf_compliant'])) {
+         $PLUGIN_HOOKS['csrf_compliant'] = array();
+      }
+      
+      // Ensure CSRF compliance first
+      $PLUGIN_HOOKS['csrf_compliant']['twofactor'] = true;
+      
+      // Register the plugin class with explicit configuration rights
+      Plugin::registerClass('PluginTwofactorConfig', [
+         'addtomenu' => true,
+         'rights' => [
+            'config' => UPDATE,
+            'read' => READ,
+            'update' => UPDATE
+         ]
+      ]);
+      
+      // Register core authentication hooks (these need to run regardless of login status)
+      $PLUGIN_HOOKS['pre_init']['twofactor'] = 'plugin_twofactor_check_auth';
+      $PLUGIN_HOOKS['init_session']['twofactor'] = 'plugin_twofactor_check_auth';
+      $PLUGIN_HOOKS['post_init']['twofactor'] = 'plugin_twofactor_check_auth';
+      
+      // Hook for new user creation
+      $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
+      
+      // Add menu entry and configuration page if user has rights
+      if (Session::getLoginUserID() && Session::haveRight('config', UPDATE)) {
+         $PLUGIN_HOOKS['menu_toadd']['twofactor'] = [
+            'config' => 'PluginTwofactorConfig'
+         ];
+         $PLUGIN_HOOKS['config_page']['twofactor'] = 'front/config.form.php';
+         
+         // Register additional menu hooks if needed
+         $PLUGIN_HOOKS['menu_entry']['twofactor'] = true;
+         $PLUGIN_HOOKS['submenu_entry']['twofactor']['options']['config'] = [
+            'title' => __('Two Factor Authentication', 'twofactor'),
+            'page'  => '/plugins/twofactor/front/config.form.php'
+         ];
+      }
+      
+      return true;
+   } catch (Exception $e) {
+      Toolbox::logError('2FA Plugin Initialization Error: ' . $e->getMessage());
+      return false;
    }
 }
 
@@ -69,11 +85,13 @@ function plugin_twofactor_check_auth() {
       '/plugins/twofactor/front/config.form.php',
       '/front/plugin.form.php',
       '/front/plugin.php',
-      '/ajax/common.tabs.php',  // Allow AJAX requests
-      '/ajax/dropdown.php',     // Allow dropdown AJAX requests
-      '/front/central.php',     // Allow access to dashboard
-      '/ajax/marketplace.php',  // Allow marketplace access
-      '/ajax/pluginactions.php' // Allow plugin actions
+      '/ajax/common.tabs.php',     // Allow AJAX requests
+      '/ajax/dropdown.php',        // Allow dropdown AJAX requests
+      '/front/central.php',        // Allow access to dashboard
+      '/ajax/marketplace.php',     // Allow marketplace access
+      '/ajax/pluginactions.php',   // Allow plugin actions
+      '/front/config.form.php',    // Allow access to config
+      '/ajax/getDropdownValue.php' // Allow dropdown values
    ];
    
    foreach ($allowed_pages as $page) {
