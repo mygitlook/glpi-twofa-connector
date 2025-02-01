@@ -43,12 +43,11 @@ function plugin_version_twofactor() {
       'author' => 'Your Name',
       'license' => 'GPLv2+',
       'homepage' => '',
-      'minGLPIVersion' => '9.5',
       'requirements' => [
          'glpi' => [
-            'min' => '9.5',
-            'max' => '10.0.0',
-            'dev' => false
+            'min' => '10.0.0',  // Updated to match your GLPI version
+            'max' => '10.0.99', // Allow all 10.0.x versions
+            'dev' => false      // Not a development version
          ]
       ]
    ];
