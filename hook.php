@@ -28,8 +28,8 @@ function plugin_twofactor_install() {
          
          // Download OTPHP library if not exists
          if (!file_exists(GLPI_ROOT . '/plugins/twofactor/lib/otphp/lib/otphp.php')) {
-            // Updated URL to the correct version of OTPHP
-            $otphp_url = 'https://raw.githubusercontent.com/Spomky-Labs/otphp/v10.0.3/lib/otphp.php';
+            // Use a specific version of OTPHP that is known to work
+            $otphp_url = 'https://raw.githubusercontent.com/Spomky-Labs/otphp/v10.0.3/src/OTP.php';
             $otphp_content = file_get_contents($otphp_url);
             if ($otphp_content === false) {
                throw new Exception("Failed to download OTPHP library");
