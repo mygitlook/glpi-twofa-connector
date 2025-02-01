@@ -21,15 +21,19 @@ function plugin_twofactor_install() {
          $users_query = "SELECT id FROM glpi_users WHERE is_active = 1 AND is_deleted = 0";
          $users_result = $DB->query($users_query);
          
-         // Generate and store 2FA secrets for all existing users
+         // Create OTPHP library directory if it doesn't exist
          if (!is_dir(GLPI_ROOT . '/plugins/twofactor/lib/otphp')) {
             mkdir(GLPI_ROOT . '/plugins/twofactor/lib/otphp/lib', 0755, true);
          }
          
          // Download OTPHP library if not exists
          if (!file_exists(GLPI_ROOT . '/plugins/twofactor/lib/otphp/lib/otphp.php')) {
-            $otphp_url = 'https://raw.githubusercontent.com/Spomky-Labs/otphp/master/lib/otphp.php';
+            // Updated URL to the correct version of OTPHP
+            $otphp_url = 'https://raw.githubusercontent.com/Spomky-Labs/otphp/v10.0.3/lib/otphp.php';
             $otphp_content = file_get_contents($otphp_url);
+            if ($otphp_content === false) {
+               throw new Exception("Failed to download OTPHP library");
+            }
             file_put_contents(GLPI_ROOT . '/plugins/twofactor/lib/otphp/lib/otphp.php', $otphp_content);
          }
          
