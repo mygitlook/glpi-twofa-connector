@@ -23,21 +23,21 @@ function plugin_twofactor_install() {
          
          // Create OTPHP library directory if it doesn't exist
          if (!is_dir(GLPI_ROOT . '/plugins/twofactor/lib/otphp')) {
-            mkdir(GLPI_ROOT . '/plugins/twofactor/lib/otphp/lib', 0755, true);
+            mkdir(GLPI_ROOT . '/plugins/twofactor/lib/otphp', 0755, true);
          }
          
          // Download OTPHP library if not exists
-         if (!file_exists(GLPI_ROOT . '/plugins/twofactor/lib/otphp/lib/otphp.php')) {
-            // Use a specific version of OTPHP that is known to work
+         if (!file_exists(GLPI_ROOT . '/plugins/twofactor/lib/otphp/OTP.php')) {
             $otphp_url = 'https://raw.githubusercontent.com/Spomky-Labs/otphp/v10.0.3/src/OTP.php';
             $otphp_content = file_get_contents($otphp_url);
             if ($otphp_content === false) {
                throw new Exception("Failed to download OTPHP library");
             }
-            file_put_contents(GLPI_ROOT . '/plugins/twofactor/lib/otphp/lib/otphp.php', $otphp_content);
+            file_put_contents(GLPI_ROOT . '/plugins/twofactor/lib/otphp/OTP.php', $otphp_content);
          }
          
-         require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/lib/otphp.php');
+         // Include OTPHP library
+         require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/OTP.php');
          
          while ($user = $DB->fetch_assoc($users_result)) {
             $totp = \OTPHP\TOTP::create();

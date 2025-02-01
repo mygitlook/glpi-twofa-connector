@@ -1,17 +1,11 @@
 <?php
 function plugin_init_twofactor() {
-   global $PLUGIN_HOOKS, $CFG_GLPI;
+   global $PLUGIN_HOOKS;
    
    try {
-      // Initialize hooks array if not set
-      if (!isset($PLUGIN_HOOKS['csrf_compliant'])) {
-         $PLUGIN_HOOKS['csrf_compliant'] = array();
-      }
-      
-      // Ensure CSRF compliance first
       $PLUGIN_HOOKS['csrf_compliant']['twofactor'] = true;
       
-      // Register the plugin class without problematic attributes
+      // Register the plugin class
       Plugin::registerClass('PluginTwofactorConfig');
       
       // Register core authentication hooks
@@ -22,10 +16,8 @@ function plugin_init_twofactor() {
       // Hook for new user creation
       $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
       
-      // Add menu entry and configuration page if user has rights
+      // Add configuration page
       if (Session::getLoginUserID() && Session::haveRight('config', UPDATE)) {
-         // Add to menu using standard GLPI method
-         $PLUGIN_HOOKS['menu']['twofactor'] = true;
          $PLUGIN_HOOKS['config_page']['twofactor'] = 'front/config.form.php';
       }
       
