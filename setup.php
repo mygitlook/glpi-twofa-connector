@@ -63,16 +63,7 @@ function plugin_twofactor_check_auth() {
    $allowed_pages = [
       '/front/login.php',
       '/plugins/twofactor/front/verify.php',
-      '/plugins/twofactor/front/config.form.php',
-      '/front/plugin.form.php',
-      '/front/plugin.php',
-      '/ajax/common.tabs.php',     // Allow AJAX requests
-      '/ajax/dropdown.php',        // Allow dropdown AJAX requests
-      '/front/central.php',        // Allow access to dashboard
-      '/ajax/marketplace.php',     // Allow marketplace access
-      '/ajax/pluginactions.php',   // Allow plugin actions
-      '/front/config.form.php',    // Allow access to config
-      '/ajax/getDropdownValue.php' // Allow dropdown values
+      '/plugins/twofactor/front/config.form.php'
    ];
    
    foreach ($allowed_pages as $page) {
@@ -115,7 +106,7 @@ function plugin_twofactor_user_creation($user) {
    
    try {
       // Generate and store 2FA secret for new user
-      require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/lib/otphp.php');
+      require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/OTP.php');
       $totp = \OTPHP\TOTP::create();
       $secret = $totp->getSecret();
       
