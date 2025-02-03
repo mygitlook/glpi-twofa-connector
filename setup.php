@@ -65,7 +65,8 @@ function plugin_twofactor_check_auth() {
       '/plugins/twofactor/front/verify.php',
       '/plugins/twofactor/front/config.form.php',
       '/front/plugin.form.php',
-      '/front/plugin.php'
+      '/front/plugin.php',
+      '/ajax/common.tabs.php'  // Allow AJAX requests
    ];
    
    foreach ($allowed_pages as $page) {
@@ -77,23 +78,24 @@ function plugin_twofactor_check_auth() {
    try {
       $userId = $_SESSION['glpiID'];
       
-      // Check if user has 2FA secret
+      // Check if user has active 2FA setup
       $query = "SELECT * FROM glpi_plugin_twofactor_secrets 
                 WHERE users_id = $userId AND is_active = 1";
       $result = $DB->query($query);
       
       if ($DB->numrows($result) === 0) {
-         // User doesn't have 2FA set up, redirect to setup
+         // Force redirect to 2FA setup if not configured
+         $_SESSION['plugin_twofactor_needs_setup'] = true;
          Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/config.form.php');
          exit();
-      } else {
-         $row = $DB->fetch_assoc($result);
-         // If user has 2FA enabled but not verified in this session
-         if (!isset($_SESSION['plugin_twofactor_verified'])) {
-            Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/verify.php');
-            exit();
-         }
       }
+      
+      // If user has 2FA but hasn't verified in this session
+      if (!isset($_SESSION['plugin_twofactor_verified'])) {
+         Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/verify.php');
+         exit();
+      }
+      
    } catch (Exception $e) {
       Toolbox::logError('2FA Check Error: ' . $e->getMessage());
       return true;
