@@ -6,18 +6,20 @@ function plugin_init_twofactor() {
       $PLUGIN_HOOKS['csrf_compliant']['twofactor'] = true;
       
       // Register the plugin class
-      Plugin::registerClass('PluginTwofactorConfig');
+      Plugin::registerClass('PluginTwofactorConfig', [
+         'addtabon' => ['User']
+      ]);
       
       // Register core authentication hooks
-      $PLUGIN_HOOKS['pre_init']['twofactor'] = 'plugin_twofactor_check_auth';
-      $PLUGIN_HOOKS['init_session']['twofactor'] = 'plugin_twofactor_check_auth';
-      $PLUGIN_HOOKS['post_init']['twofactor'] = 'plugin_twofactor_check_auth';
+      $PLUGIN_HOOKS['pre_login']['twofactor'] = 'plugin_twofactor_check_auth';
+      $PLUGIN_HOOKS['post_login']['twofactor'] = 'plugin_twofactor_check_auth';
       
       // Hook for new user creation
       $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
       
       // Add configuration page
       if (Session::getLoginUserID() && Session::haveRight('config', UPDATE)) {
+         $PLUGIN_HOOKS['menu_toadd']['twofactor'] = ['config' => 'PluginTwofactorConfig'];
          $PLUGIN_HOOKS['config_page']['twofactor'] = 'front/config.form.php';
       }
       
@@ -40,6 +42,9 @@ function plugin_version_twofactor() {
             'min' => '10.0.0',
             'max' => '10.0.99',
             'dev' => false
+         ],
+         'php' => [
+            'min' => '7.4.0'
          ]
       ]
    ];

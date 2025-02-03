@@ -4,6 +4,14 @@ class PluginTwofactorConfig extends CommonDBTM {
       return __('Two Factor Authentication', 'twofactor');
    }
 
+   static function canCreate() {
+      return Session::haveRight('config', UPDATE);
+   }
+
+   static function canView() {
+      return Session::haveRight('config', READ);
+   }
+
    function showConfigForm() {
       global $DB, $CFG_GLPI;
       
