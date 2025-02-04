@@ -24,8 +24,12 @@ class PluginTwofactorConfig extends CommonDBTM {
       
       if ($DB->numrows($result) == 0) {
          // Generate new secret
-         require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/OTP.php');
-         require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/TOTP.php');
+         $lib_path = GLPI_ROOT . '/plugins/twofactor/lib/otphp/';
+         require_once($lib_path . 'OTP.php');
+         require_once($lib_path . 'TOTP.php');
+         require_once($lib_path . 'Trait/Base32.php');
+         require_once($lib_path . 'Trait/ParameterTrait.php');
+         
          $totp = \OTPHP\TOTP::create();
          $secret = $totp->getSecret();
          

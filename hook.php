@@ -28,6 +28,13 @@ function plugin_twofactor_install() {
             GLPI_ROOT . '/plugins/twofactor/lib/otphp/Trait'
          ];
          
+         // First ensure the base directory exists
+         if (!is_dir(GLPI_ROOT . '/plugins/twofactor/lib')) {
+            if (!mkdir(GLPI_ROOT . '/plugins/twofactor/lib', 0755, true)) {
+               throw new Exception("Failed to create base directory");
+            }
+         }
+         
          foreach ($lib_paths as $path) {
             if (!is_dir($path)) {
                if (!mkdir($path, 0755, true)) {
@@ -54,6 +61,15 @@ function plugin_twofactor_install() {
                if ($content === false) {
                   throw new Exception("Failed to download OTPHP file: $file");
                }
+               
+               // Ensure the directory exists before writing the file
+               $dir = dirname($file_path);
+               if (!is_dir($dir)) {
+                  if (!mkdir($dir, 0755, true)) {
+                     throw new Exception("Failed to create directory: $dir");
+                  }
+               }
+               
                if (!file_put_contents($file_path, $content)) {
                   throw new Exception("Failed to write OTPHP file: $file");
                }
