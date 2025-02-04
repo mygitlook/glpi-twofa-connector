@@ -21,23 +21,41 @@ function plugin_twofactor_install() {
          $users_query = "SELECT id FROM glpi_users WHERE is_active = 1 AND is_deleted = 0";
          $users_result = $DB->query($users_query);
          
-         // Create OTPHP library directory if it doesn't exist
-         if (!is_dir(GLPI_ROOT . '/plugins/twofactor/lib/otphp')) {
-            mkdir(GLPI_ROOT . '/plugins/twofactor/lib/otphp', 0755, true);
+         // Create OTPHP library directories
+         $lib_paths = [
+            GLPI_ROOT . '/plugins/twofactor/lib/otphp',
+            GLPI_ROOT . '/plugins/twofactor/lib/otphp/Trait'
+         ];
+         
+         foreach ($lib_paths as $path) {
+            if (!is_dir($path)) {
+               mkdir($path, 0755, true);
+            }
          }
          
-         // Download OTPHP library if not exists
-         if (!file_exists(GLPI_ROOT . '/plugins/twofactor/lib/otphp/OTP.php')) {
-            $otphp_url = 'https://raw.githubusercontent.com/Spomky-Labs/otphp/v10.0.3/src/OTP.php';
-            $otphp_content = file_get_contents($otphp_url);
-            if ($otphp_content === false) {
-               throw new Exception("Failed to download OTPHP library");
+         // Define OTPHP files to download
+         $otphp_files = [
+            'OTP.php' => 'https://raw.githubusercontent.com/Spomky-Labs/otphp/v10.0.3/src/OTP.php',
+            'TOTP.php' => 'https://raw.githubusercontent.com/Spomky-Labs/otphp/v10.0.3/src/TOTP.php',
+            'Trait/Base32.php' => 'https://raw.githubusercontent.com/Spomky-Labs/otphp/v10.0.3/src/Trait/Base32.php',
+            'Trait/ParameterTrait.php' => 'https://raw.githubusercontent.com/Spomky-Labs/otphp/v10.0.3/src/Trait/ParameterTrait.php'
+         ];
+         
+         // Download each file
+         foreach ($otphp_files as $file => $url) {
+            $file_path = GLPI_ROOT . '/plugins/twofactor/lib/otphp/' . $file;
+            if (!file_exists($file_path)) {
+               $content = file_get_contents($url);
+               if ($content === false) {
+                  throw new Exception("Failed to download OTPHP file: $file");
+               }
+               file_put_contents($file_path, $content);
             }
-            file_put_contents(GLPI_ROOT . '/plugins/twofactor/lib/otphp/OTP.php', $otphp_content);
          }
          
          // Include OTPHP library
          require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/OTP.php');
+         require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/TOTP.php');
          
          while ($user = $DB->fetch_assoc($users_result)) {
             $totp = \OTPHP\TOTP::create();

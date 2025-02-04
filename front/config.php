@@ -27,7 +27,8 @@ if (isset($_POST['verification_code'])) {
         $secret = $row['secret'];
         
         // Verify TOTP code
-        require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/lib/otphp.php');
+        require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/OTP.php');
+        require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/TOTP.php');
         $totp = new \OTPHP\TOTP($secret);
         
         if ($totp->verify($code)) {
