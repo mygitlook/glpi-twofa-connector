@@ -26,38 +26,55 @@ function plugin_twofactor_install() {
          $otphp_dir = $base_dir . '/otphp';
          $trait_dir = $otphp_dir . '/Trait';
          
-         // Ensure base directory exists
-         if (!is_dir($base_dir)) {
-            if (!mkdir($base_dir, 0755, true)) {
-               throw new Exception("Failed to create base directory");
+         // Ensure directories exist with proper permissions
+         foreach ([$base_dir, $otphp_dir, $trait_dir] as $dir) {
+            if (!is_dir($dir)) {
+               if (!mkdir($dir, 0755, true)) {
+                  throw new Exception("Failed to create directory: $dir");
+               }
             }
-         }
-         
-         // Ensure OTPHP directory exists
-         if (!is_dir($otphp_dir)) {
-            if (!mkdir($otphp_dir, 0755, true)) {
-               throw new Exception("Failed to create OTPHP directory");
-            }
-         }
-         
-         // Ensure Trait directory exists
-         if (!is_dir($trait_dir)) {
-            if (!mkdir($trait_dir, 0755, true)) {
-               throw new Exception("Failed to create Trait directory");
-            }
+            chmod($dir, 0755);
          }
          
          // Define OTPHP files with their full content
          $otphp_files = [
+            'Trait/ParameterTrait.php' => [
+                'path' => $trait_dir . '/ParameterTrait.php',
+                'content' => '<?php
+namespace OTPHP\Trait;
+
+trait ParameterTrait {
+    private $label;
+    private $issuer;
+    
+    public function setLabel($label) {
+        $this->label = $label;
+        return $this;
+    }
+    
+    public function getLabel() {
+        return $this->label;
+    }
+    
+    public function setIssuer($issuer) {
+        $this->issuer = $issuer;
+        return $this;
+    }
+    
+    public function getIssuer() {
+        return $this->issuer;
+    }
+}'
+            ],
             'OTP.php' => [
                 'path' => $otphp_dir . '/OTP.php',
                 'content' => '<?php
 namespace OTPHP;
-use OTPHP\ParameterTrait;
-use OTPHP\Base32;
 
-abstract class OTP implements OTPInterface
-{
+use OTPHP\Trait\ParameterTrait;
+use OTPHP\Trait\Base32;
+
+abstract class OTP implements OTPInterface {
     use ParameterTrait;
     use Base32;
     
@@ -65,25 +82,21 @@ abstract class OTP implements OTPInterface
     protected $digest;
     protected $digits;
     
-    public function __construct($secret)
-    {
+    public function __construct($secret) {
         $this->secret = $secret;
         $this->digest = "sha1";
         $this->digits = 6;
     }
     
-    public function getSecret()
-    {
+    public function getSecret() {
         return $this->secret;
     }
     
-    public function getDigest()
-    {
+    public function getDigest() {
         return $this->digest;
     }
     
-    public function getDigits()
-    {
+    public function getDigits() {
         return $this->digits;
     }
 }'
@@ -166,42 +179,9 @@ trait Base32
     }
 }'
             ],
-            'Trait/ParameterTrait.php' => [
-                'path' => $trait_dir . '/ParameterTrait.php',
-                'content' => '<?php
-namespace OTPHP;
-
-trait ParameterTrait
-{
-    private $label;
-    private $issuer;
-    
-    public function setLabel($label)
-    {
-        $this->label = $label;
-        return $this;
-    }
-    
-    public function getLabel()
-    {
-        return $this->label;
-    }
-    
-    public function setIssuer($issuer)
-    {
-        $this->issuer = $issuer;
-        return $this;
-    }
-    
-    public function getIssuer()
-    {
-        return $this->issuer;
-    }
-}'
-            ]
          ];
          
-         // Write all OTPHP files
+         // Write all OTPHP files with proper permissions
          foreach ($otphp_files as $file => $data) {
             if (!file_put_contents($data['path'], $data['content'])) {
                throw new Exception("Failed to write file: " . $data['path']);
