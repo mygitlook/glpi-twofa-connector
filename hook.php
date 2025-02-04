@@ -21,19 +21,24 @@ function plugin_twofactor_install() {
          $users_query = "SELECT id FROM glpi_users WHERE is_active = 1 AND is_deleted = 0";
          $users_result = $DB->query($users_query);
          
-         // Create OTPHP library directories
+         // Create OTPHP library directories with proper permissions
          $lib_paths = [
+            GLPI_ROOT . '/plugins/twofactor/lib',
             GLPI_ROOT . '/plugins/twofactor/lib/otphp',
             GLPI_ROOT . '/plugins/twofactor/lib/otphp/Trait'
          ];
          
          foreach ($lib_paths as $path) {
             if (!is_dir($path)) {
-               mkdir($path, 0755, true);
+               if (!mkdir($path, 0755, true)) {
+                  throw new Exception("Failed to create directory: $path");
+               }
+               // Ensure Apache can read the directory
+               chmod($path, 0755);
             }
          }
          
-         // Define OTPHP files to download
+         // Define OTPHP files to download with proper versions
          $otphp_files = [
             'OTP.php' => 'https://raw.githubusercontent.com/Spomky-Labs/otphp/v10.0.3/src/OTP.php',
             'TOTP.php' => 'https://raw.githubusercontent.com/Spomky-Labs/otphp/v10.0.3/src/TOTP.php',
@@ -41,7 +46,7 @@ function plugin_twofactor_install() {
             'Trait/ParameterTrait.php' => 'https://raw.githubusercontent.com/Spomky-Labs/otphp/v10.0.3/src/Trait/ParameterTrait.php'
          ];
          
-         // Download each file
+         // Download each file and set proper permissions
          foreach ($otphp_files as $file => $url) {
             $file_path = GLPI_ROOT . '/plugins/twofactor/lib/otphp/' . $file;
             if (!file_exists($file_path)) {
@@ -49,7 +54,19 @@ function plugin_twofactor_install() {
                if ($content === false) {
                   throw new Exception("Failed to download OTPHP file: $file");
                }
-               file_put_contents($file_path, $content);
+               if (!file_put_contents($file_path, $content)) {
+                  throw new Exception("Failed to write OTPHP file: $file");
+               }
+               // Ensure Apache can read the file
+               chmod($file_path, 0644);
+            }
+         }
+         
+         // Verify all required files exist before proceeding
+         foreach ($otphp_files as $file => $url) {
+            $file_path = GLPI_ROOT . '/plugins/twofactor/lib/otphp/' . $file;
+            if (!file_exists($file_path)) {
+                throw new Exception("Required OTPHP file not found: $file");
             }
          }
          
