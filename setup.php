@@ -10,14 +10,14 @@ function plugin_init_twofactor() {
          'addtabon' => ['User']
       ]);
       
-      // Register core authentication hooks
+      // Register authentication hooks
       $PLUGIN_HOOKS['pre_login']['twofactor'] = 'plugin_twofactor_check_auth';
       $PLUGIN_HOOKS['post_login']['twofactor'] = 'plugin_twofactor_check_auth';
       
       // Hook for new user creation
       $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
       
-      // Add configuration page
+      // Add configuration page - removed rights check to ensure redirection works
       if (Session::getLoginUserID()) {
          $PLUGIN_HOOKS['menu_toadd']['twofactor'] = ['config' => 'PluginTwofactorConfig'];
          $PLUGIN_HOOKS['config_page']['twofactor'] = 'front/config.php';

@@ -231,3 +231,4 @@ function plugin_twofactor_uninstall() {
       return false;
    }
 }
+
