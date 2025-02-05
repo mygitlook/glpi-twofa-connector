@@ -18,7 +18,7 @@ function plugin_init_twofactor() {
       $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
       
       // Add configuration page
-      if (Session::getLoginUserID() && Session::haveRight('config', UPDATE)) {
+      if (Session::getLoginUserID()) {
          $PLUGIN_HOOKS['menu_toadd']['twofactor'] = ['config' => 'PluginTwofactorConfig'];
          $PLUGIN_HOOKS['config_page']['twofactor'] = 'front/config.php';
       }

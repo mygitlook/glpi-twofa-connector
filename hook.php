@@ -74,9 +74,9 @@ namespace OTPHP;
 use OTPHP\Trait\ParameterTrait;
 use OTPHP\Trait\Base32;
 
-abstract class OTP implements OTPInterface {
-    use ParameterTrait;
-    use Base32;
+class OTP implements OTPInterface {
+    use \OTPHP\Trait\ParameterTrait;
+    use \OTPHP\Trait\Base32;
     
     protected $secret;
     protected $digest;
