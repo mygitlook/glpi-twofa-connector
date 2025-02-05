@@ -10,7 +10,7 @@ function plugin_init_twofactor() {
          'addtabon' => ['User']
       ]);
       
-      // Register authentication hooks with higher priority
+      // Register authentication hooks with higher priority (1)
       $PLUGIN_HOOKS['pre_login']['twofactor'] = ['plugin_twofactor_check_auth', 1];
       $PLUGIN_HOOKS['post_login']['twofactor'] = ['plugin_twofactor_check_auth', 1];
       

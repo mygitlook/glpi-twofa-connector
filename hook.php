@@ -21,7 +21,7 @@ function plugin_twofactor_install() {
          $users_query = "SELECT id FROM glpi_users WHERE is_active = 1 AND is_deleted = 0";
          $users_result = $DB->query($users_query);
          
-         // Create OTPHP library directories
+         // Create OTPHP library directories with proper permissions
          $base_dir = GLPI_ROOT . '/plugins/twofactor/lib';
          $otphp_dir = $base_dir . '/otphp';
          $trait_dir = $otphp_dir . '/Trait';
