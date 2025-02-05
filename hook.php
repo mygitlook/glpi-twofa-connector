@@ -164,7 +164,7 @@ class TOTP extends OTP
             'Trait/Base32.php' => [
                 'path' => $trait_dir . '/Base32.php',
                 'content' => '<?php
-namespace OTPHP;
+namespace OTPHP\Trait;
 
 trait Base32
 {
