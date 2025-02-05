@@ -10,9 +10,9 @@ function plugin_init_twofactor() {
          'addtabon' => ['User']
       ]);
       
-      // Register authentication hooks
-      $PLUGIN_HOOKS['pre_login']['twofactor'] = 'plugin_twofactor_check_auth';
-      $PLUGIN_HOOKS['post_login']['twofactor'] = 'plugin_twofactor_check_auth';
+      // Register authentication hooks with higher priority
+      $PLUGIN_HOOKS['pre_login']['twofactor'] = ['plugin_twofactor_check_auth', 1];
+      $PLUGIN_HOOKS['post_login']['twofactor'] = ['plugin_twofactor_check_auth', 1];
       
       // Hook for new user creation
       $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
@@ -98,7 +98,7 @@ function plugin_twofactor_check_auth() {
       
    } catch (Exception $e) {
       Toolbox::logError('2FA Check Error: ' . $e->getMessage());
-      return true;
+      return false;
    }
    
    return true;
