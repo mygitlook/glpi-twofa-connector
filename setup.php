@@ -1,3 +1,4 @@
+
 <?php
 function plugin_init_twofactor() {
    global $PLUGIN_HOOKS;
@@ -17,7 +18,7 @@ function plugin_init_twofactor() {
       // Hook for new user creation
       $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
       
-      // Add configuration page - removed rights check to ensure redirection works
+      // Add configuration page
       if (Session::getLoginUserID()) {
          $PLUGIN_HOOKS['menu_toadd']['twofactor'] = ['config' => 'PluginTwofactorConfig'];
          $PLUGIN_HOOKS['config_page']['twofactor'] = 'front/config.php';
@@ -108,8 +109,7 @@ function plugin_twofactor_user_creation($user) {
    global $DB;
    
    try {
-      // Generate and store 2FA secret for new user
-      require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/OTP.php');
+      require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/TOTP.php');
       $totp = \OTPHP\TOTP::create();
       $secret = $totp->getSecret();
       
