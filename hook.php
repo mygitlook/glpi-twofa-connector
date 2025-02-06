@@ -26,15 +26,20 @@ function plugin_twofactor_install() {
          $otphp_dir = $base_dir . '/otphp';
          $trait_dir = $otphp_dir . '/Trait';
          
-         // Ensure directories exist with proper permissions
-         foreach ([$base_dir, $otphp_dir, $trait_dir] as $dir) {
-            if (!is_dir($dir)) {
-               if (!mkdir($dir, 0755, true)) {
-                  throw new Exception("Failed to create directory: $dir");
-               }
-            }
-            chmod($dir, 0755);
+         // First remove any existing directories to ensure clean installation
+         if (is_dir($base_dir)) {
+            array_map('unlink', glob("$trait_dir/*.*"));
+            rmdir($trait_dir);
+            array_map('unlink', glob("$otphp_dir/*.*"));
+            rmdir($otphp_dir);
+            array_map('unlink', glob("$base_dir/*.*"));
+            rmdir($base_dir);
          }
+         
+         // Create directories with proper permissions
+         mkdir($base_dir, 0755, true);
+         mkdir($otphp_dir, 0755, true);
+         mkdir($trait_dir, 0755, true);
          
          // Define OTPHP files with their full content
          $otphp_files = [
@@ -74,9 +79,9 @@ namespace OTPHP;
 use OTPHP\Trait\ParameterTrait;
 use OTPHP\Trait\Base32;
 
-class OTP implements OTPInterface {
-    use \OTPHP\Trait\ParameterTrait;
-    use \OTPHP\Trait\Base32;
+class OTP {
+    use ParameterTrait;
+    use Base32;
     
     protected $secret;
     protected $digest;
