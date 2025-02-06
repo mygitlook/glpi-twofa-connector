@@ -1,3 +1,4 @@
+
 <?php
 function plugin_twofactor_install() {
    global $DB;
@@ -20,32 +21,43 @@ function plugin_twofactor_install() {
          // Get all existing users
          $users_query = "SELECT id FROM glpi_users WHERE is_active = 1 AND is_deleted = 0";
          $users_result = $DB->query($users_query);
-         
-         // Create OTPHP library directories with proper permissions
-         $base_dir = GLPI_ROOT . '/plugins/twofactor/lib';
-         $otphp_dir = $base_dir . '/otphp';
-         $trait_dir = $otphp_dir . '/Trait';
-         
-         // First remove any existing directories to ensure clean installation
-         if (is_dir($base_dir)) {
-            array_map('unlink', glob("$trait_dir/*.*"));
-            rmdir($trait_dir);
-            array_map('unlink', glob("$otphp_dir/*.*"));
-            rmdir($otphp_dir);
-            array_map('unlink', glob("$base_dir/*.*"));
-            rmdir($base_dir);
-         }
-         
-         // Create directories with proper permissions
-         mkdir($base_dir, 0755, true);
-         mkdir($otphp_dir, 0755, true);
-         mkdir($trait_dir, 0755, true);
-         
-         // Define OTPHP files with their full content
-         $otphp_files = [
-            'Trait/ParameterTrait.php' => [
-                'path' => $trait_dir . '/ParameterTrait.php',
-                'content' => '<?php
+      }
+      
+      // Create OTPHP library files regardless of table existence
+      $base_dir = GLPI_ROOT . '/plugins/twofactor/lib';
+      $otphp_dir = $base_dir . '/otphp';
+      $trait_dir = $otphp_dir . '/Trait';
+      
+      // First remove any existing directories to ensure clean installation
+      if (is_dir($trait_dir)) {
+         array_map('unlink', glob("$trait_dir/*.*"));
+         rmdir($trait_dir);
+      }
+      if (is_dir($otphp_dir)) {
+         array_map('unlink', glob("$otphp_dir/*.*"));
+         rmdir($otphp_dir);
+      }
+      if (is_dir($base_dir)) {
+         array_map('unlink', glob("$base_dir/*.*"));
+         rmdir($base_dir);
+      }
+      
+      // Create directories with proper permissions
+      if (!mkdir($base_dir, 0755, true)) {
+         throw new Exception("Failed to create base directory");
+      }
+      if (!mkdir($otphp_dir, 0755, true)) {
+         throw new Exception("Failed to create OTPHP directory");
+      }
+      if (!mkdir($trait_dir, 0755, true)) {
+         throw new Exception("Failed to create Trait directory");
+      }
+      
+      // Define OTPHP files with their full content
+      $otphp_files = [
+         'Trait/ParameterTrait.php' => [
+            'path' => $trait_dir . '/ParameterTrait.php',
+            'content' => '<?php
 namespace OTPHP\Trait;
 
 trait ParameterTrait {
@@ -70,10 +82,10 @@ trait ParameterTrait {
         return $this->issuer;
     }
 }'
-            ],
-            'OTP.php' => [
-                'path' => $otphp_dir . '/OTP.php',
-                'content' => '<?php
+         ],
+         'OTP.php' => [
+            'path' => $otphp_dir . '/OTP.php',
+            'content' => '<?php
 namespace OTPHP;
 
 use OTPHP\Trait\ParameterTrait;
@@ -105,10 +117,10 @@ class OTP {
         return $this->digits;
     }
 }'
-            ],
-            'TOTP.php' => [
-                'path' => $otphp_dir . '/TOTP.php',
-                'content' => '<?php
+         ],
+         'TOTP.php' => [
+            'path' => $otphp_dir . '/TOTP.php',
+            'content' => '<?php
 namespace OTPHP;
 
 class TOTP extends OTP
@@ -165,10 +177,10 @@ class TOTP extends OTP
         return str_replace($placeholder, rawurlencode($uri), $qrCodeUrl);
     }
 }'
-            ],
-            'Trait/Base32.php' => [
-                'path' => $trait_dir . '/Base32.php',
-                'content' => '<?php
+         ],
+         'Trait/Base32.php' => [
+            'path' => $trait_dir . '/Base32.php',
+            'content' => '<?php
 namespace OTPHP\Trait;
 
 trait Base32
@@ -183,18 +195,21 @@ trait Base32
         return base64_encode($input);
     }
 }'
-            ],
-         ];
-         
-         // Write all OTPHP files with proper permissions
-         foreach ($otphp_files as $file => $data) {
-            if (!file_put_contents($data['path'], $data['content'])) {
-               throw new Exception("Failed to write file: " . $data['path']);
-            }
-            chmod($data['path'], 0644);
+         ],
+      ];
+      
+      // Write all OTPHP files with proper permissions
+      foreach ($otphp_files as $file => $data) {
+         if (file_put_contents($data['path'], $data['content']) === false) {
+            throw new Exception("Failed to write file: " . $data['path']);
          }
-         
-         // Create secrets for existing users
+         if (!chmod($data['path'], 0644)) {
+            throw new Exception("Failed to set permissions on file: " . $data['path']);
+         }
+      }
+      
+      // Create secrets for existing users if table was just created
+      if (!$DB->tableExists("glpi_plugin_twofactor_secrets")) {
          while ($user = $DB->fetch_assoc($users_result)) {
             $totp = \OTPHP\TOTP::create();
             $secret = $totp->getSecret();
@@ -206,6 +221,7 @@ trait Base32
             $DB->query($insert_query);
          }
       }
+      
       return true;
    } catch (Exception $e) {
       Toolbox::logError('2FA Installation Error: ' . $e->getMessage());
