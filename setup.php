@@ -4,6 +4,7 @@ function plugin_init_twofactor() {
    global $PLUGIN_HOOKS;
    
    try {
+      // Enable CSRF protection for the plugin
       $PLUGIN_HOOKS['csrf_compliant']['twofactor'] = true;
       
       // Register the plugin class

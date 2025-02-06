@@ -1,3 +1,4 @@
+
 <?php
 class PluginTwofactorConfig extends CommonDBTM {
    static function getTypeName($nb = 0) {
@@ -15,6 +16,9 @@ class PluginTwofactorConfig extends CommonDBTM {
    function showConfigForm() {
       global $DB, $CFG_GLPI;
       
+      // Add CSRF token to the form
+      Html::requireJs('glpi_csrf_token');
+      
       $userId = $_SESSION['glpiID'];
       
       // Check if 2FA is already set up
@@ -24,12 +28,7 @@ class PluginTwofactorConfig extends CommonDBTM {
       
       if ($DB->numrows($result) == 0) {
          // Generate new secret
-         $lib_path = GLPI_ROOT . '/plugins/twofactor/lib/otphp/';
-         require_once($lib_path . 'OTP.php');
-         require_once($lib_path . 'TOTP.php');
-         require_once($lib_path . 'Trait/Base32.php');
-         require_once($lib_path . 'Trait/ParameterTrait.php');
-         
+         require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/TOTP.php');
          $totp = \OTPHP\TOTP::create();
          $secret = $totp->getSecret();
          
@@ -49,7 +48,12 @@ class PluginTwofactorConfig extends CommonDBTM {
       $totp->setIssuer('GLPI');
       
       echo "<div class='center'>";
-      echo "<form name='form' method='post'>";
+      echo "<form name='form' method='post' action='".$_SERVER['PHP_SELF']."'>";
+      
+      // Add CSRF token field
+      Html::closeForm();
+      echo Html::getSimpleForm($_SERVER['PHP_SELF'], 'post', '', ['id' => 'twofactor_form']);
+      
       echo "<table class='tab_cadre_fixe'>";
       
       echo "<tr><th colspan='2'>" . __('Two Factor Authentication Setup', 'twofactor') . "</th></tr>";
@@ -75,11 +79,11 @@ class PluginTwofactorConfig extends CommonDBTM {
       
       echo "<tr class='tab_bg_2'>";
       echo "<td colspan='2' class='center'>";
-      echo "<input type='submit' name='update' class='submit' value='" . __('Verify and Enable 2FA', 'twofactor') . "'>";
+      echo Html::submit(__('Verify and Enable 2FA', 'twofactor'), ['name' => 'update', 'class' => 'submit']);
       echo "</td></tr>";
       
       echo "</table>";
-      echo "</form>";
+      Html::closeForm();
       echo "</div>";
    }
 }
