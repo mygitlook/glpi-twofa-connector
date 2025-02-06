@@ -10,7 +10,7 @@ function plugin_twofactor_install() {
             `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
             `users_id` int(11) UNSIGNED NOT NULL,
             `secret` varchar(255) NOT NULL,
-            `is_active` tinyint(1) NOT NULL DEFAULT '1',
+            `is_active` tinyint(1) UNSIGNED NOT NULL DEFAULT '1',
             `date_creation` TIMESTAMP NULL DEFAULT NULL,
             `date_mod` TIMESTAMP NULL DEFAULT NULL,
             PRIMARY KEY (`id`),

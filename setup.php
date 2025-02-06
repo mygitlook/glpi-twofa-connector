@@ -1,7 +1,6 @@
-
 <?php
 function plugin_init_twofactor() {
-   global $PLUGIN_HOOKS;
+   global $PLUGIN_HOOKS, $CFG_GLPI;
    
    try {
       // Enable CSRF protection for the plugin
@@ -21,6 +20,7 @@ function plugin_init_twofactor() {
       
       // Add configuration page
       if (Session::getLoginUserID()) {
+         $PLUGIN_HOOKS['config']['twofactor'] = 'PluginTwofactorConfig';
          $PLUGIN_HOOKS['menu_toadd']['twofactor'] = ['config' => 'PluginTwofactorConfig'];
          $PLUGIN_HOOKS['config_page']['twofactor'] = 'front/config.php';
       }
@@ -89,13 +89,13 @@ function plugin_twofactor_check_auth() {
          // Force redirect to 2FA setup if not configured
          $_SESSION['plugin_twofactor_needs_setup'] = true;
          Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/config.php');
-         exit();
+         return false;
       }
       
       // If user has 2FA but hasn't verified in this session
       if (!isset($_SESSION['plugin_twofactor_verified'])) {
          Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/verify.php');
-         exit();
+         return false;
       }
       
    } catch (Exception $e) {

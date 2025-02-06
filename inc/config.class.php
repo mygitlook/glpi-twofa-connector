@@ -16,9 +16,6 @@ class PluginTwofactorConfig extends CommonDBTM {
    function showConfigForm() {
       global $DB, $CFG_GLPI;
       
-      // Add CSRF token to the form
-      Html::requireJs('glpi_csrf_token');
-      
       $userId = $_SESSION['glpiID'];
       
       // Check if 2FA is already set up
@@ -48,11 +45,10 @@ class PluginTwofactorConfig extends CommonDBTM {
       $totp->setIssuer('GLPI');
       
       echo "<div class='center'>";
-      echo "<form name='form' method='post' action='".$_SERVER['PHP_SELF']."'>";
+      echo "<form name='form' method='post' action='" . Plugin::getWebDir('twofactor') . "/front/config.php'>";
       
-      // Add CSRF token field
-      Html::closeForm();
-      echo Html::getSimpleForm($_SERVER['PHP_SELF'], 'post', '', ['id' => 'twofactor_form']);
+      // Add CSRF token
+      Html::addHiddenConfirmation();
       
       echo "<table class='tab_cadre_fixe'>";
       
@@ -79,7 +75,7 @@ class PluginTwofactorConfig extends CommonDBTM {
       
       echo "<tr class='tab_bg_2'>";
       echo "<td colspan='2' class='center'>";
-      echo Html::submit(__('Verify and Enable 2FA', 'twofactor'), ['name' => 'update', 'class' => 'submit']);
+      echo Html::submit(__('Verify and Enable 2FA', 'twofactor'), ['name' => 'update']);
       echo "</td></tr>";
       
       echo "</table>";
