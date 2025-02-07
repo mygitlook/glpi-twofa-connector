@@ -1,3 +1,4 @@
+
 <?php
 function plugin_init_twofactor() {
    global $PLUGIN_HOOKS, $CFG_GLPI;
@@ -68,7 +69,8 @@ function plugin_twofactor_check_auth() {
       '/front/plugin.form.php',
       '/front/plugin.php',
       '/ajax/common.tabs.php',
-      '/front/login.php'
+      '/front/login.php',
+      '/front/logout.php'
    ];
    
    foreach ($allowed_pages as $page) {
@@ -86,6 +88,7 @@ function plugin_twofactor_check_auth() {
       $result = $DB->query($query);
       
       if ($DB->numrows($result) === 0) {
+         $_SESSION['plugin_twofactor_needs_setup'] = true;
          Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/config.php');
          return false;
       }
