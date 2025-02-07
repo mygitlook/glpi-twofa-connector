@@ -12,9 +12,10 @@ function plugin_init_twofactor() {
          'addtabon' => ['User']
       ]);
       
-      // Register authentication hooks with higher priority (1)
-      $PLUGIN_HOOKS['pre_init']['twofactor'] = ['plugin_twofactor_check_auth', 1];
-      $PLUGIN_HOOKS['init_session']['twofactor'] = ['plugin_twofactor_check_auth', 1];
+      // Register early authentication hooks
+      $PLUGIN_HOOKS['pre_init']['twofactor'] = 'plugin_twofactor_check_auth';
+      $PLUGIN_HOOKS['post_init']['twofactor'] = 'plugin_twofactor_check_auth';
+      $PLUGIN_HOOKS['init_session']['twofactor'] = 'plugin_twofactor_check_auth';
       
       // Hook for new user creation
       $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
@@ -56,8 +57,8 @@ function plugin_version_twofactor() {
 function plugin_twofactor_check_auth() {
    global $DB, $CFG_GLPI;
    
-   // Skip check if not logged in
-   if (!isset($_SESSION['glpiID'])) {
+   // Only check after user is logged in
+   if (!isset($_SESSION['glpiID']) || !$_SESSION['glpiID']) {
       return true;
    }
 
@@ -71,7 +72,8 @@ function plugin_twofactor_check_auth() {
       '/ajax/common.tabs.php',
       '/front/login.php',
       '/front/logout.php',
-      '/index.php'
+      '/index.php',
+      '/front/central.php'
    ];
    
    foreach ($allowed_pages as $page) {
@@ -89,15 +91,16 @@ function plugin_twofactor_check_auth() {
       $result = $DB->query($query);
       
       if ($DB->numrows($result) === 0) {
+         // User needs to set up 2FA
          $_SESSION['plugin_twofactor_needs_setup'] = true;
          Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/config.php');
-         exit(); // Add explicit exit after redirect
+         die();
       }
       
       // If user has 2FA but hasn't verified in this session
       if (!isset($_SESSION['plugin_twofactor_verified'])) {
          Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/verify.php');
-         exit(); // Add explicit exit after redirect
+         die();
       }
       
    } catch (Exception $e) {
