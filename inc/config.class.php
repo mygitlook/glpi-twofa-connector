@@ -45,7 +45,8 @@ class PluginTwofactorConfig extends CommonDBTM {
       $totp->setIssuer('GLPI');
       
       echo "<div class='center'>";
-      Html::showSimpleForm(Plugin::getWebDir('twofactor') . '/front/config.php', 'post', '', [
+      echo "<form method='post' action='" . $CFG_GLPI['root_doc'] . "/plugins/twofactor/front/config.php'>";
+      Html::showSimpleForm($_SERVER['PHP_SELF'], 'post', '', [
          'id' => 'twofactor_form'
       ]);
       

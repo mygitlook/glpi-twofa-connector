@@ -1,5 +1,9 @@
+
 <?php
-include ("../../../inc/includes.php");
+// Check for direct access
+if (!defined('GLPI_ROOT')) {
+   include ("../../../inc/includes.php");
+}
 
 Session::checkLoginUser();
 
@@ -8,9 +12,10 @@ if (!$plugin->isActivated("twofactor")) {
    Html::displayNotFoundError();
 }
 
+// Set page title
 Html::header("Two Factor Authentication", $_SERVER['PHP_SELF'], "config", "plugins");
 
-// Create config object
+// Create config object and show form
 $config = new PluginTwofactorConfig();
 
 // Handle form submission if POST
@@ -27,7 +32,6 @@ if (isset($_POST['verification_code'])) {
         $secret = $row['secret'];
         
         // Verify TOTP code
-        require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/OTP.php');
         require_once(GLPI_ROOT . '/plugins/twofactor/lib/otphp/TOTP.php');
         $totp = new \OTPHP\TOTP($secret);
         
@@ -39,7 +43,7 @@ if (isset($_POST['verification_code'])) {
             $DB->query($query);
             
             $_SESSION['plugin_twofactor_verified'] = true;
-            Html::redirect($CFG_GLPI['root_doc']);
+            Html::redirect($CFG_GLPI['root_doc'] . '/front/central.php');
         } else {
             Session::addMessageAfterRedirect(
                 __('Invalid verification code', 'twofactor'),
