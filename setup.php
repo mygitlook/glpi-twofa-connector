@@ -13,8 +13,8 @@ function plugin_init_twofactor() {
       ]);
       
       // Register authentication hooks with higher priority (1)
-      $PLUGIN_HOOKS['pre_login']['twofactor'] = ['plugin_twofactor_check_auth', 1];
-      $PLUGIN_HOOKS['post_login']['twofactor'] = ['plugin_twofactor_check_auth', 1];
+      $PLUGIN_HOOKS['pre_init']['twofactor'] = ['plugin_twofactor_check_auth', 1];
+      $PLUGIN_HOOKS['init_session']['twofactor'] = ['plugin_twofactor_check_auth', 1];
       
       // Hook for new user creation
       $PLUGIN_HOOKS['user_creation']['twofactor'] = 'plugin_twofactor_user_creation';
@@ -70,7 +70,8 @@ function plugin_twofactor_check_auth() {
       '/front/plugin.php',
       '/ajax/common.tabs.php',
       '/front/login.php',
-      '/front/logout.php'
+      '/front/logout.php',
+      '/index.php'
    ];
    
    foreach ($allowed_pages as $page) {
@@ -90,13 +91,13 @@ function plugin_twofactor_check_auth() {
       if ($DB->numrows($result) === 0) {
          $_SESSION['plugin_twofactor_needs_setup'] = true;
          Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/config.php');
-         return false;
+         exit(); // Add explicit exit after redirect
       }
       
       // If user has 2FA but hasn't verified in this session
       if (!isset($_SESSION['plugin_twofactor_verified'])) {
          Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/verify.php');
-         return false;
+         exit(); // Add explicit exit after redirect
       }
       
    } catch (Exception $e) {
