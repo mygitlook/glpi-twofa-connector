@@ -20,9 +20,9 @@ function plugin_init_twofactor() {
       
       // Add configuration page
       if (Session::getLoginUserID()) {
-         $PLUGIN_HOOKS['config']['twofactor'] = 'PluginTwofactorConfig';
-         $PLUGIN_HOOKS['menu_toadd']['twofactor'] = ['config' => 'PluginTwofactorConfig'];
          $PLUGIN_HOOKS['config_page']['twofactor'] = 'front/config.php';
+         $PLUGIN_HOOKS['menu_toadd']['twofactor'] = ['config' => 'PluginTwofactorConfig'];
+         $PLUGIN_HOOKS['config']['twofactor'] = 'PluginTwofactorConfig';
       }
       
       return true;
@@ -63,12 +63,12 @@ function plugin_twofactor_check_auth() {
    // Skip 2FA check for specific pages
    $current_page = $_SERVER['PHP_SELF'];
    $allowed_pages = [
-      '/front/login.php',
       '/plugins/twofactor/front/verify.php',
       '/plugins/twofactor/front/config.php',
       '/front/plugin.form.php',
       '/front/plugin.php',
-      '/ajax/common.tabs.php'
+      '/ajax/common.tabs.php',
+      '/front/login.php'
    ];
    
    foreach ($allowed_pages as $page) {
@@ -86,8 +86,6 @@ function plugin_twofactor_check_auth() {
       $result = $DB->query($query);
       
       if ($DB->numrows($result) === 0) {
-         // Force redirect to 2FA setup if not configured
-         $_SESSION['plugin_twofactor_needs_setup'] = true;
          Html::redirect($CFG_GLPI['root_doc'] . '/plugins/twofactor/front/config.php');
          return false;
       }
